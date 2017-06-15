@@ -9,6 +9,7 @@ object CCodeGenerator {
   var mergeBB = false
   var avx = false
   var power8 = false
+  var useCritical = false
 
   /**
     * Set the type of the primitives
@@ -57,7 +58,12 @@ object CCodeGenerator {
     var s = str
     s += s"JNIEXPORT j$prim JNICALL Java_BenchRunner_00024_accessObjectByteArray(JNIEnv * jni, jobject me, jobject primArray) {\n"
     s += s"  jsize len = (*jni)->GetArrayLength(jni, primArray) / $primSize;\n"
-    s += s"  $prim * values = ($prim*)(*jni)->Get${prim.capitalize}ArrayElements(jni, primArray, NULL);\n"
+
+    if (useCritical)
+      s += s"  $prim * values = ($prim*)(*jni)->GetPrimitiveArrayCritical(jni, primArray, NULL);\n"
+    else
+      s += s"  $prim * values = ($prim*)(*jni)->Get${prim.capitalize}ArrayElements(jni, primArray, NULL);\n"
+
     s += s"  $prim result = ($prim)0;\n"
     s += s"\n"
     if (addPrims) {
@@ -70,7 +76,12 @@ object CCodeGenerator {
       s += s"    tmp = values[i];\n"
       s += s"  }\n"
     }*/
-    s += s"  (*jni)->Release${prim.capitalize}ArrayElements(jni, primArray, values, JNI_ABORT);\n"
+
+    if (useCritical)
+      s += s"  (*jni)->ReleasePrimitiveArrayCritical(jni, primArray, values, JNI_ABORT);\n"
+    else
+      s += s"  (*jni)->Release${prim.capitalize}ArrayElements(jni, primArray, values, JNI_ABORT);\n"
+
     s += s"  return result;\n"
     s += s"}\n"
     s += s"\n"
@@ -104,7 +115,12 @@ object CCodeGenerator {
       s += s"    bufOffsets[b] = num_prims;\n"
       s += s"    num_prims += bufLens[b];\n"
     }
-    s += s"    bufs[b] = ($prim*)(*jni)->GetByteArrayElements(jni, bufRefs[b], NULL);\n"
+
+    if (useCritical)
+      s += s"    bufs[b] = ($prim*)(*jni)->GetPrimitiveArrayCritical(jni, bufRefs[b], NULL);\n"
+    else
+      s += s"    bufs[b] = ($prim*)(*jni)->GetByteArrayElements(jni, bufRefs[b], NULL);\n"
+
     s += s"  }\n"
     s += s"\n"
     if (mergeBB) {
@@ -140,7 +156,12 @@ object CCodeGenerator {
     s += s"\n"
     s += s"  // Release the arrays, and JNI_ABORT to prevent copying back the values\n"
     s += s"  for (int b = 0; b < buffers; b++) {\n"
-    s += s"     (*jni)->ReleaseByteArrayElements(jni, bufRefs[b], (jbyte*)bufs[b], JNI_ABORT);\n"
+
+    if (useCritical)
+      s += s"     (*jni)->ReleasePrimitiveArrayCritical(jni, bufRefs[b], (jbyte*)bufs[b], JNI_ABORT);\n"
+    else
+      s += s"     (*jni)->ReleaseByteArrayElements(jni, bufRefs[b], (jbyte*)bufs[b], JNI_ABORT);\n"
+
     s += s"  }\n"
     s += s"\n"
     if (mergeBB) {
@@ -369,11 +390,20 @@ object CCodeGenerator {
       s += "\n"
       s += s"  arr = (*jni)->GetObjectField(jni, $objectName, fid_${className}_a$a);\n"
       s += s"  len = (*jni)->GetArrayLength(jni, arr);\n"
-      s += s"  arrVals = (*jni)->Get${prim.capitalize}ArrayElements(jni, arr, NULL);\n"
+
+      if (useCritical)
+        s += s"  arrVals = ($prim*)(*jni)->GetPrimitiveArrayCritical(jni, arr, NULL);\n"
+      else
+        s += s"  arrVals = (*jni)->Get${prim.capitalize}ArrayElements(jni, arr, NULL);\n"
+
       //s += s"  for (int i = 0; i < len; i++) result += arrVals[i];\n"
       s += s"  memcpy(($prim*)&native_obj[pos], arrVals, len * sizeof($prim));\n"
       s += s"  pos += len;\n"
-      s += s"  (*jni)->Release${prim.capitalize}ArrayElements(jni, arr, arrVals, JNI_ABORT);\n"
+
+      if (useCritical)
+        s += s"  (*jni)->ReleasePrimitiveArrayCritical(jni, arr, arrVals, JNI_ABORT);\n"
+      else
+        s += s"  (*jni)->Release${prim.capitalize}ArrayElements(jni, arr, arrVals, JNI_ABORT);\n"
     }
 
     for (r <- 0 until clazz.references) {
@@ -456,10 +486,19 @@ object CCodeGenerator {
       s += "\n"
       s += s"      arr = (*jni)->GetObjectField(thread_jni, $objectName, fid_${className}_a$a);\n"
       s += s"      len = (*jni)->GetArrayLength(thread_jni, arr);\n"
-      s += s"      arrVals = (*jni)->Get${prim.capitalize}ArrayElements(thread_jni, arr, NULL);\n"
+
+      if (useCritical)
+        s += s"      arrVals = ($prim*)(*jni)->GetPrimitiveArrayCritical(thread_jni, arr, NULL);\n"
+      else
+        s += s"      arrVals = (*jni)->Get${prim.capitalize}ArrayElements(thread_jni, arr, NULL);\n"
+
       s += s"      memcpy(($prim*)&native_col[i*object_size+pos], arrVals, len * sizeof($prim));\n"
       s += s"      pos += len;\n"
-      s += s"      (*jni)->Release${prim.capitalize}ArrayElements(thread_jni, arr, arrVals, JNI_ABORT);\n"
+
+      if (useCritical)
+        s += s"      (*jni)->ReleasePrimitiveArrayCritical(thread_jni, arr, arrVals, JNI_ABORT);\n"
+      else
+        s += s"      (*jni)->Release${prim.capitalize}ArrayElements(thread_jni, arr, arrVals, JNI_ABORT);\n"
     }
 
     for (r <- 0 until clazz.references) {

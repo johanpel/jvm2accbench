@@ -31,6 +31,7 @@ object BenchGenerator {
     "--add              : Accumulate primitives (recommended)\n" +
     "--avx              : Use AVX intrinsics for copies (Intel AVX only)\n" +
     "--power8           : Use gcc compiler optimizations for POWER8 (-mcpu=power8 and -mtune=power8)" +
+    "--critical         : Use JNI GetPrimitiveArrayCritical instead of Get<Primitive>ArrayElements" +
     "--prefetch         : Use __builtin_prefetch to load primitives for native approaches (not recommended)\n" +
     "--mergbb           : Merge ByteBuffers after serializing part of a collection (not recommended)\n" +
     "-v                 : verbose output\n"
@@ -59,6 +60,7 @@ object BenchGenerator {
     CCodeGenerator.prefetch = args.contains("--prefetch")
     CCodeGenerator.avx = args.contains("--avx")
     CCodeGenerator.power8 = args.contains("--power8")
+    CCodeGenerator.useCritical = args.contains("--critical")
 
     try {
       CCompiler = args(args.indexWhere(s => s == "--ccompiler") + 1)
