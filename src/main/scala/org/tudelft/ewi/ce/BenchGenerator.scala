@@ -17,7 +17,7 @@ object BenchGenerator {
     "-h or --help       : Display this help text" +
     "--jarpath <path>   : path to this jar\n" +
     "--javadir <path>   : path to OpenJDK include directory\n" +
-    "--ccompiler <name> : compiler, e.g. gcc\n" +
+    "--ccompiler <name> : C compiler, e.g. gcc\n" +
     "--leaf             : Leaf object layout\n" +
     "-p P               : P primitives (leaf & willow)\n" +
     "-a A               : A arrays (only for leaf)\n" +
@@ -30,9 +30,9 @@ object BenchGenerator {
     "-d D               : Willow tree depth\n" +
     "--add              : Accumulate primitives (recommended)\n" +
     "--avx              : Use AVX intrinsics for copies (Intel AVX only)\n" +
-    "--power8           : Use gcc compiler optimizations for POWER8 (-mcpu=power8 and -mtune=power8)" +
-    "--critical         : Use JNI GetPrimitiveArrayCritical instead of Get<Primitive>ArrayElements" +
-    "--prefetch         : Use __builtin_prefetch to load primitives for native approaches (not recommended)\n" +
+    "--power8           : Use gcc compiler optimizations for POWER8 (-mcpu=power8 and -mtune=power8)\n" +
+    "--critical         : Use JNI GetPrimitiveArrayCritical instead of Get<Primitive>ArrayElements\n" +
+    "--prefetch         : Use __builtin_prefetch to load primitives for native approaches using prefetching (not recommended)\n" +
     "--mergbb           : Merge ByteBuffers after serializing part of a collection (not recommended)\n" +
     "-v                 : verbose output\n"
 
