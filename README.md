@@ -7,7 +7,7 @@ Based on a specifiable object graph layout, this tool generates code to serializ
 * Direct (copy): directly accessing JVM memory and serializing it to a contiguous memory region allocated with `malloc`
 * Direct (no-copy): directly accessing the JVM memory without copying it to a contiguous memory region
 
-We wrote this tool to get insight and numbers on the JVMs ability to serialize/access data to/in a native environment that will ultimately be attached to some accelerator interface.
+We wrote this tool to get insight and numbers on the HotSpot VMs ability to serialize/access data to/in a native environment that will ultimately be attached to some accelerator interface.
 The tool can then be used to run a benchmark serializing/accessing a single object with a single thread or a collection of object with multiple threads.
 
 # Requirements:
@@ -49,7 +49,7 @@ scala -cp target/jvm2accbench-1.0.jar "BenchGenerator" \
 ```
 scala -cp target/jvm2accbench-1.0.jar "BenchRunner" --help
 ```
-* Example of running a benchmark. Compressed OOPs must be disabled such that JNI references are actual virtual memory addresses to the objects
+* Example of running a benchmark. Compressed OOPs must be disabled such that internal references of the JVM are actual virtual memory addresses to the objects
 ```
 scala -J-XX:-UseCompressedOops -cp target/jvm2accbench-1.0.jar:bench/out "BenchRunner" -m "single" -r 32
 ```
